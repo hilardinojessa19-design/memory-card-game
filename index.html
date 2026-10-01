@@ -1,21 +1,48 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Memory Card Game ✨</title>
-  <link rel="stylesheet" href="./style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Memory Card Game</title>
+
+    <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-  <div class="container">
-    <h1>🧠 Memory Card Game</h1>
-    <div class="stats">
-      <p>Moves: <span id="moves">0</span></p>
-      <p>Matches: <span id="matches">0</span>/8</p>
+
+    <div class="container">
+
+        <h1>🧠 Memory Card Game</h1>
+
+        <p class="subtitle">Find all the matching pairs!</p>
+
+        <div class="stats">
+            <div>
+                <span>Moves</span>
+                <strong id="moves">0</strong>
+            </div>
+
+            <div>
+                <span>Matches</span>
+                <strong id="matches">0/8</strong>
+            </div>
+
+            <div>
+                <span>Best</span>
+                <strong id="bestScore">-</strong>
+            </div>
+        </div>
+
+        <button id="newGameBtn">🔄 New Game</button>
+
+        <div id="gameBoard" class="game-board"></div>
+
+        <div id="message" class="message"></div>
+
     </div>
-    <div class="game-board" id="gameBoard"></div>
-    <button onclick="startGame()">🔄 New Game</button>
-  </div>
-  <script src="./script.js"></script>
+
+    <script src="script.js"></script>
+
 </body>
 </html>
