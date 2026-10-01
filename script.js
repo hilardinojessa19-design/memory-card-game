@@ -1,110 +1,320 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+// ==========================================
+// MEMORY CARD GAME
+// ==========================================
+
+// The 8 symbols will create 16 cards
+const symbols = [
+    "🍎",
+    "🍌",
+    "🍇",
+    "🍉",
+    "🍓",
+    "🍒",
+    "🥝",
+    "🍍"
+];
+
+// Game variables
+let cards = [];
+let firstCard = null;
+let secondCard = null;
+let lockBoard = false;
+
+let moves = 0;
+let matches = 0;
+
+// Get HTML elements
+const gameBoard = document.getElementById("gameBoard");
+const movesDisplay = document.getElementById("moves");
+const matchesDisplay = document.getElementById("matches");
+const bestScoreDisplay = document.getElementById("bestScore");
+const newGameBtn = document.getElementById("newGameBtn");
+const message = document.getElementById("message");
+
+
+// ==========================================
+// DATABASE / LOCAL STORAGE
+// ==========================================
+
+// Get saved best score
+function getBestScore() {
+
+    const savedScore = localStorage.getItem("memoryGameBestScore");
+
+    if (savedScore === null) {
+        return null;
+    }
+
+    return Number(savedScore);
 }
 
-body {
-  font-family: 'Poppins', Arial, sans-serif;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
+
+// Save best score
+function saveBestScore(score) {
+
+    localStorage.setItem(
+        "memoryGameBestScore",
+        score
+    );
 }
 
-.container {
-  text-align: center;
+
+// Display best score
+function displayBestScore() {
+
+    const bestScore = getBestScore();
+
+    if (bestScore === null) {
+        bestScoreDisplay.textContent = "-";
+    } else {
+        bestScoreDisplay.textContent = bestScore;
+    }
 }
 
-h1 {
-  color: white;
-  font-size: 2.5em;
-  margin-bottom: 10px;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+
+// ==========================================
+// SHUFFLE CARDS
+// ==========================================
+
+function shuffle(array) {
+
+    for (let i = array.length - 1; i > 0; i--) {
+
+        const randomIndex =
+            Math.floor(Math.random() * (i + 1));
+
+        [array[i], array[randomIndex]] =
+            [array[randomIndex], array[i]];
+    }
+
+    return array;
 }
 
-.stats {
-  display: flex;
-  justify-content: center;
-  gap: 30px;
-  color: white;
-  font-size: 1.2em;
-  margin-bottom: 20px;
-  font-weight: bold;
+
+// ==========================================
+// CREATE GAME
+// ==========================================
+
+function createGame() {
+
+    // Clear old cards
+    gameBoard.innerHTML = "";
+
+    // Reset variables
+    firstCard = null;
+    secondCard = null;
+    lockBoard = false;
+
+    moves = 0;
+    matches = 0;
+
+    movesDisplay.textContent = moves;
+    matchesDisplay.textContent = "0/8";
+    message.textContent = "";
+
+    // Duplicate symbols to create pairs
+    cards = [...symbols, ...symbols];
+
+    // Shuffle cards
+    shuffle(cards);
+
+    // Create each card
+    cards.forEach((symbol, index) => {
+
+        const card = document.createElement("div");
+
+        card.classList.add("card");
+
+        card.dataset.symbol = symbol;
+        card.dataset.index = index;
+
+        card.innerHTML = `
+            <div class="card-back">
+                ❓
+            </div>
+
+            <div class="card-front">
+                ${symbol}
+            </div>
+        `;
+
+        // Add touch/click event
+        card.addEventListener("click", () => {
+
+            flipCard(card);
+
+        });
+
+        gameBoard.appendChild(card);
+
+    });
 }
 
-.game-board {
-  display: grid;
-  grid-template-columns: repeat(4, 100px);
-  gap: 15px;
-  justify-content: center;
-  margin: 20px auto;
+
+// ==========================================
+// FLIP CARD
+// ==========================================
+
+function flipCard(card) {
+
+    // Don't allow invalid clicks
+    if (lockBoard) {
+        return;
+    }
+
+    if (card === firstCard) {
+        return;
+    }
+
+    if (card.classList.contains("matched")) {
+        return;
+    }
+
+    // Flip card
+    card.classList.add("flipped");
+
+    // First card
+    if (firstCard === null) {
+
+        firstCard = card;
+
+        return;
+    }
+
+    // Second card
+    secondCard = card;
+
+    // One move
+    moves++;
+
+    movesDisplay.textContent = moves;
+
+    checkMatch();
 }
 
-.card {
-  width: 100px;
-  height: 100px;
-  background: linear-gradient(145deg, #ffffff, #e6e6e6);
-  border-radius: 15px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 2.5em;
-  font-weight: bold;
-  cursor: pointer;
-  box-shadow: 5px 5px 15px rgba(0,0,0,0.3);
-  transition: transform 0.3s, background 0.3s;
-  color: transparent;
+
+// ==========================================
+// CHECK MATCH
+// ==========================================
+
+function checkMatch() {
+
+    const isMatch =
+        firstCard.dataset.symbol ===
+        secondCard.dataset.symbol;
+
+    if (isMatch) {
+
+        handleMatch();
+
+    } else {
+
+        handleMismatch();
+
+    }
 }
 
-.card:hover {
-  transform: scale(1.05);
+
+// ==========================================
+// MATCH
+// ==========================================
+
+function handleMatch() {
+
+    firstCard.classList.add("matched");
+    secondCard.classList.add("matched");
+
+    matches++;
+
+    matchesDisplay.textContent =
+        `${matches}/8`;
+
+    resetTurn();
+
+    // Check if game is complete
+    if (matches === 8) {
+
+        finishGame();
+
+    }
 }
 
-.card.flipped {
-  background: linear-gradient(145deg, #ff9a9e, #fecfef);
-  color: #333;
-  transform: rotateY(180deg);
+
+// ==========================================
+// NOT A MATCH
+// ==========================================
+
+function handleMismatch() {
+
+    lockBoard = true;
+
+    setTimeout(() => {
+
+        firstCard.classList.remove("flipped");
+        secondCard.classList.remove("flipped");
+
+        resetTurn();
+
+    }, 900);
 }
 
-.card.matched {
-  background: linear-gradient(145deg, #a8edea, #fed6e3);
-  cursor: default;
-  animation: bounce 0.5s;
+
+// ==========================================
+// RESET TURN
+// ==========================================
+
+function resetTurn() {
+
+    firstCard = null;
+    secondCard = null;
+    lockBoard = false;
 }
 
-@keyframes bounce {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
+
+// ==========================================
+// GAME FINISHED
+// ==========================================
+
+function finishGame() {
+
+    const bestScore = getBestScore();
+
+    if (
+        bestScore === null ||
+        moves < bestScore
+    ) {
+
+        saveBestScore(moves);
+
+        displayBestScore();
+
+        message.textContent =
+            `🎉 Congratulations! New Best Score: ${moves} moves!`;
+
+    } else {
+
+        message.textContent =
+            `🎉 You won! Finished in ${moves} moves!`;
+
+    }
 }
 
-button {
-  padding: 12px 30px;
-  font-size: 18px;
-  font-weight: bold;
-  cursor: pointer;
-  border-radius: 50px;
-  border: none;
-  background: white;
-  color: #764ba2;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-  transition: transform 0.2s;
-}
 
-button:hover {
-  transform: translateY(-2px);
-}
+// ==========================================
+// NEW GAME BUTTON
+// ==========================================
 
-@media (max-width: 500px) {
- .game-board {
-    grid-template-columns: repeat(4, 70px);
-    gap: 10px;
-  }
- .card {
-    width: 70px;
-    height: 70px;
-    font-size: 1.8em;
-  }
-}
+newGameBtn.addEventListener("click", () => {
+
+    createGame();
+
+});
+
+
+// ==========================================
+// START GAME
+// ==========================================
+
+displayBestScore();
+
+createGame();
