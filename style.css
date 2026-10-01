@@ -1,1 +1,71 @@
+const emojis = ['🍓', '🍓', '🍉', '🍉', '🍇', '🍇', '🍒', '🍒', '🍍', '🍍', '🥝', '🥝', '🍑', '🍑', '🍊', '🍊'];
+let gameBoard = document.getElementById('gameBoard');
+let flippedCards = [];
+let matchedCards = [];
+let moves = 0;
+let lockBoard = false;
 
+function startGame() {
+  gameBoard.innerHTML = '';
+  flippedCards = [];
+  matchedCards = [];
+  moves = 0;
+  lockBoard = false;
+  updateStats();
+  
+  let shuffledCards = emojis.sort(() => 0.5 - Math.random());
+  
+  shuffledCards.forEach(emoji => {
+    const cardElement = document.createElement('div');
+    cardElement.classList.add('card');
+    cardElement.dataset.value = emoji;
+    cardElement.addEventListener('click', flipCard);
+    gameBoard.appendChild(cardElement);
+  });
+}
+
+function flipCard() {
+  if (lockBoard) return;
+  if (this === flippedCards[0]) return;
+  if (this.classList.contains('matched')) return;
+  
+  this.classList.add('flipped');
+  this.textContent = this.dataset.value;
+  flippedCards.push(this);
+  
+  if (flippedCards.length === 2) {
+    moves++;
+    updateStats();
+    checkMatch();
+  }
+}
+
+function checkMatch() {
+  lockBoard = true;
+  if (flippedCards[0].dataset.value === flippedCards[1].dataset.value) {
+    flippedCards.forEach(card => card.classList.add('matched'));
+    matchedCards.push(...flippedCards);
+    flippedCards = [];
+    lockBoard = false;
+    
+    if (matchedCards.length === emojis.length) {
+      setTimeout(() => alert(`🎉 You Win! \nTotal Moves: ${moves}`), 500);
+    }
+  } else {
+    setTimeout(() => {
+      flippedCards.forEach(card => {
+        card.classList.remove('flipped');
+        card.textContent = '';
+      });
+      flippedCards = [];
+      lockBoard = false;
+    }, 1000);
+  }
+}
+
+function updateStats() {
+  document.getElementById('moves').textContent = moves;
+  document.getElementById('matches').textContent = matchedCards.length / 2;
+}
+
+startGame();
